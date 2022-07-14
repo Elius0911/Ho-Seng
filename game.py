@@ -1,6 +1,6 @@
 ##插件與腳位定義----------------------------------------------
 from machine import I2C,Pin#
-from gpb import delay
+from gpb import delay#
 import urandom
 
 from ble_uart import BleUart
