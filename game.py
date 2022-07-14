@@ -1,10 +1,13 @@
-from machine import I2C,Pin
+##插件與腳位定義----------------------------------------------
+from machine import I2C,Pin,ADC,PWM
 from gpb import delay
 import urandom
 
 from ble_uart import BleUart
 from i2c_lcd import I2cLcd
 from lcd_api import LcdApi
+
+import math
 
 
 I2C_ADDR = 0x27
@@ -28,7 +31,16 @@ btnG = Pin(12,Pin.IN)
 btnB = Pin(13,Pin.IN)
 
 ##全域變數----------------------------------------------------
+currentStageIndex = 2
 timer = 0
+
+vr = ADC(1)
+fan = PWM(9, 200, 0)
+stage1Target = 0  ## =0(讓風扇轉到最快) =1(讓風扇停)
+stage1Success = 0
+stage1Sense = 0  #偵測電阻值一次就好
+
+
 currentStageIndex = 5
 stage2SuccessFlag = 0
 stage5SuccessFlag = 0
@@ -58,6 +70,7 @@ def startGame():
 def currentStage(index):
     if index == 1:
         stage1LCD()
+        stage1()
         ##stage1()
     elif index == 2:
         stage2LCD()
@@ -89,11 +102,36 @@ def nextStage():
 ##Stage1 : 電阻控制風扇
 def stage1LCD():
     lcd.move_to(0,0)
-    lcd.putstr("Control The Fan")
+    lcd.putstr("control the Fan")
     
-##def stage1():
-    
-
+def stage1():
+    global vr
+    global stage1Target
+    global stage1Success
+    global stage1Sense
+    while True:
+        print(vr.read())
+        fan.duty(int(vr.read()/4))
+        if stage1Sense == 0:
+            if vr.read()<2000:
+                stage1Target = 0  ##讓風扇轉到最快
+                stage1Sense = 1
+            if vr.read()>2001:
+                stage1Target = 1  ##讓風扇停
+                stage1Sense = 1
+            
+        if stage1Target == 1:
+            if vr.read() < 70:
+                stage1Success = 1
+                fan.duty(0)
+                break
+        if stage1Target == 0:
+            if vr.read() > 3600 :
+                stage1Success = 1
+                fan.duty(0)
+                break
+        
+        delay(100)
 
 ##Stage2 顏色: 按鈕控制RGB
 def stage2LCD():
@@ -236,11 +274,12 @@ def stage5():
 startGame()
 currentStage(5)
 '''
+if stage1Success == 1:
+    nextStage()
+    currentStage(currentStageIndex)
 if stage2SuccessFlag == 1:
     nextStage()
     currentStage(currentStageIndex)
 '''
 if stage5SuccessFlag == 1:
-    print("YA")
-
-        
+    print("YA")       
