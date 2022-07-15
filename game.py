@@ -1,5 +1,5 @@
 ##插件與腳位定義----------------------------------------------
-from machine import I2C, Pin, ADC, PWM
+from machine import I2C, Pin, ADC, PWM, ADC
 from gpb import delay
 import urandom
 
@@ -30,6 +30,9 @@ btnR = Pin(11,Pin.IN)
 btnG = Pin(12,Pin.IN)
 btnB = Pin(13,Pin.IN)
 
+lightSensor = ADC(0)
+
+
 ##全域變數----------------------------------------------------
 timer = 0
 currentStageIndex = 1
@@ -39,6 +42,15 @@ stage2SuccessFlag = 0
 stage5SuccessFlag = 0
 
 color = ""
+
+s1Target = 0
+s2Color = ""
+s2ColorList = ["Yellow", "Purple", "Cyan", "White"]
+s4Brightness = 0
+s4Target = 0
+s5QuestionList = ["cc","cc2"]    
+s5Question = ""
+
 
 ##函式--------------------------------------------------------
 def clearLCD1():
@@ -71,8 +83,9 @@ def currentStage(index):
         stage3LCD()
         ##stage3()
     elif index == 4:
-        stage4LCD()
-        ##stage4()
+        stage4Front()
+        bleStageInstructionDisplay(currentStageIndex)
+        stage4()
     elif index == 5:
         stage5LCD()
         stage5()
@@ -212,12 +225,32 @@ def stage3LCD():
 def stage4LCD():
     lcd.move_to(0,0)
     lcd.putstr("4")
+    s4Brightness = lightSensor.read()
+    s4Target = randint(0,1)     ## =0 讓亮度變暗,  =1 讓亮度更亮
     
-##def stage4(): 
+def stage4(): 
+    while True:
+        print(str(lightSensor.read()))
+        if s4Target == 0:
+            if (lightSensor.read()) > s4Brightness +100:
+                stage4SuccessFlag = 1
+        else:
+            if (lightSensor.read()) < s4Brightness -50:
+                stage4SuccessFlag = 1
 
+##--- Stage5 藍芽模組解謎: 手機答題 ---
+def stage5Front():
+    global stageInstruction
+    global s5QuestionList
+    global s5Question
+    qPicker = urandom.randint(0, 1)
+    s5Question = s5QuestionList[qPicker]
 
-##Stage5 藍芽模組解謎: 手機答題
-def stage5LCD():
+def stage5Display():
+    global stageInstruction
+    global s5QuestionList
+    global s5Question
+    
     lcd.move_to(0,0)
     lcd.putstr("Answer on Phone")
     
@@ -267,6 +300,41 @@ def stage5():
                 else:
                     incorrect()
         delay(1000)
+
+
+##主要--------------------------------------------------------
+def main():
+    global currentStageIndex
+    global stage1SuccessFlag
+    global stage2SuccessFlag
+    global stage3SuccessFlag
+    global stage4SuccessFlag
+    global stage5SuccessFlag
+
+    if is_ble_connected == True:
+        startGame()
+        currentStageIndex = 4 ##TODO:之後刪
+        currentStage(currentStageIndex) 
+        if stage1SuccessFlag == 1:
+            nextStage()
+            currentStage(currentStageIndex)
+        if stage2SuccessFlag == 1:
+            nextStage()
+            currentStageIndex = 5 ##TODO:之後刪
+            currentStage(currentStageIndex)
+            ##nextStage()
+            ##currentStage(currentStageIndex)
+        '''
+        if stage3uccessFlag == 1:
+            nextStage()
+            currentStage(currentStageIndex)
+        '''
+        if stage4SuccessFlag == 1:
+            nextStage()
+            currentStage(currentStageIndex)
+        if stage5SuccessFlag == 1:
+            finish()
+
 
 ##主程式------------------------------------------------------
 startGame()
