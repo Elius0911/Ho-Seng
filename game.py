@@ -1,5 +1,6 @@
 ##插件與腳位定義----------------------------------------------
 from machine import I2C, Pin, ADC, PWM
+from sensor import DHT11
 from gpb import delay
 import urandom
 
@@ -31,7 +32,7 @@ while True:
 
 ##元件腳位----------------------------------------------------
 vr = ADC(1)
-##fan = PWM(9, 200, 0)
+fan = PWM(5, 200, 0)
 
 rgbR = Pin(2,Pin.OUT)
 rgbG = Pin(3,Pin.OUT)
@@ -39,6 +40,8 @@ rgbB = Pin(4,Pin.OUT)
 btnR = Pin(11,Pin.IN)
 btnG = Pin(12,Pin.IN)
 btnB = Pin(13,Pin.IN)
+
+dht = DHT11(0)
 
 
 ##全域變數----------------------------------------------------
@@ -56,6 +59,7 @@ stage5SuccessFlag = 0
 s1Target = 0
 s2Color = ""
 s2ColorList = ["Yellow", "Purple", "Cyan", "White"]
+s3Target = 0
 s5QuestionList = ["cc","cc2"]    
 s5Question = ""
 
@@ -100,11 +104,11 @@ def currentStage(index):
         stage2Display()
         bleStageInstructionDisplay(currentStageIndex)
         stage2()
-    ##elif index == 3:
-        ##stage3Front()
-        ##stage3Display()
-        ##bleStageInstructionDisplay(currentStageIndex)
-        ##stage3()
+    elif index == 3:
+        stage3Front()
+        stage3Display()
+        bleStageInstructionDisplay(currentStageIndex)
+        stage3()
     ##elif index == 4:
         ##stage4Front()
         ##stage4Display()
@@ -192,8 +196,10 @@ def stage1():
 def stage2Front():
     global s2Color
     global s2ColorList
-
+    
+    ##for i in range(5):
     colorPicker = urandom.randint(0, 3)
+    print(colorPicker)
     s2Color = s2ColorList[colorPicker]
     
 def stage2Display():
@@ -275,14 +281,33 @@ def stage2():
     
 
 ##--- Stage3: 手指增加濕度 ---(標準為當下濕度，通關為當下+5或3)
-##def stage3Front():
+def stage3Front():
+    global dht
+    global s3Target
+
+    s3Target = dht.humidity() + 5
+    print(s3Target)
 
 def stage3Display():
     lcd.move_to(0,0)
-    lcd.putstr("3")
+    lcd.putstr("Increase the")
+    lcd.move_to(0,1)
+    lcd.putstr("Humidity")
+
+    ##bleDisplay
+    stageInstruction[3] = "增加濕度到 " + str(s3Target) + " %"
     
-##def stage3():
-    
+def stage3():
+    global dht
+    global stage3SuccessFlag
+
+    while True:
+        delay(1000)
+        humidity = dht.humidity()
+        print(humidity)
+        if dht.humidity() >= s3Target:
+            stage3SuccessFlag = 1
+            break
     
 ##--- Stage4: 光敏電阻 ---
 def stage4Front():
@@ -372,21 +397,19 @@ def main():
 
     if is_ble_connected == True:
         startGame()
-        ##currentStageIndex = 2 ##TODO:之後刪
-        currentStage(currentStageIndex) 
+        currentStageIndex = 1 ##TODO:之後刪
+        currentStage(currentStageIndex)
         if stage1SuccessFlag == 1:
             nextStage()
             currentStage(currentStageIndex)
         if stage2SuccessFlag == 1:
             nextStage()
-            currentStageIndex = 5 ##TODO:之後刪
             currentStage(currentStageIndex)
-            ##nextStage()
-            ##currentStage(currentStageIndex)
-        '''
-        if stage3uccessFlag == 1:
+        if stage3SuccessFlag == 1:
             nextStage()
+            currentStageIndex = 5
             currentStage(currentStageIndex)
+        '''
         if stage4SuccessFlag == 1:
             nextStage()
             currentStage(currentStageIndex)
