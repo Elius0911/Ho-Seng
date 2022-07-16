@@ -10,7 +10,7 @@ from lcd_api import LcdApi
 
 timer = Timer(1)
 
-voice_recognition.load_database( 'cmd.bin' )
+voice_recognition.load_database('cmd.bin')
 delay(500)
 voice_recognition.start(10)
 
@@ -105,9 +105,12 @@ def startGame():
 
     lcd.move_to(0,0)
     lcd.putstr("Game Start!!")
+    clearLCD2()
+    
+    lcd.putstr("Good Luck!")
     lcd.move_to(0,1)
-    lcd.putstr("Stage: " + str(currentStageIndex) + "/5")
-    ble.write("-------------Stage " + str(currentStageIndex) +"-------------")
+    lcd.putstr("Stage: 1/5")
+    ble.write("-------------Stage 1-------------")
     clearLCD2()
 
 def currentStage():
@@ -251,6 +254,8 @@ def init():
     s4TargetFlag = 0
     s4Target = 0
     s5Question = ""
+
+    clearLCD2()
 
 ##各關函式----------------------------------------------------
 
