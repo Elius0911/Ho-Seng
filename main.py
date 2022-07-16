@@ -1,5 +1,4 @@
 ##插件與腳位定義----------------------------------------------
-from turtle import st
 from machine import I2C, Pin, ADC, PWM, Timer
 from sensor import DHT11
 import voice_recognition
