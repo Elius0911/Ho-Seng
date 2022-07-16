@@ -182,6 +182,15 @@ def finish():
     lcd.move_to(0,1)
     lcd.putstr("time: " + str(timer))
 
+def gameover():
+    global timer
+
+    lcd.move_to(0,0)
+    lcd.putstr("Game Over")
+    ble.write("------------Game Over------------")
+    lcd.move_to(0,1)
+    lcd.putstr("time: " + str(timer))
+
 
 ##主要--------------------------------------------------------
 def main():
@@ -198,23 +207,18 @@ def main():
         currentStage(currentStageIndex)
         if stage1SuccessFlag == 1:
             nextStage()
-            currentStage(currentStageIndex)
+            currentStage()
         if stage2SuccessFlag == 1:
             nextStage()
-            currentStage(currentStageIndex)
+            currentStage()
         if stage3SuccessFlag == 1:
             nextStage()
-            currentStage(currentStageIndex)
+            currentStage()
         if stage4SuccessFlag == 1:
             nextStage()
-            currentStage(currentStageIndex)
+            currentStage()
         if stage5SuccessFlag == 1:
             finish()
-
-def gameover():
-    lcd.move_to(0,0)
-    lcd.putstr("Game Over")
-    clearLCD2()
 
 def init():
     global timer
@@ -537,14 +541,13 @@ def stage5():
 
 ##主程式------------------------------------------------------
 while True:
-    cmd_id =voice_recognition.get_id() ##TODO: 安裝語音包, 確認語音ID
+    cmd_id = voice_recognition.get_id() ##TODO: 安裝語音包, 確認語音ID
     if inGame == 0: ##未進遊戲
         if cmd_id == 1: ##開始遊戲
             init()
             main()
     else: ##正在遊戲中
         if cmd_id == 2: ##結束遊戲
-            init()
             gameover()
         if cmd_id == 3: ##請求支援(提示)
             hint()
