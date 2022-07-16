@@ -1,4 +1,5 @@
 ##插件與腳位定義----------------------------------------------
+from turtle import st
 from machine import I2C, Pin, ADC, PWM, Timer
 from sensor import DHT11
 import voice_recognition
@@ -53,7 +54,7 @@ lightSensor = ADC(0)
 
 
 ##全域變數----------------------------------------------------
-inGame = 0 ##正在遊戲中
+inGame = 0 ##是否正在遊戲中
 currentStageIndex = 1
 stageInstruction = ["", "Instuction1", "Instuction2", "Instuction3", "Instuction4", "Instuction5"]  ##關卡說明
 
@@ -113,31 +114,33 @@ def startGame():
     ble.write("-------------Stage 1-------------")
     clearLCD2()
 
+    currentStage()
+
 def currentStage():
     if currentStageIndex == 1:
         stage1Front()
         stage1Display()
-        bleStageInstructionDisplay(currentStageIndex)
+        bleStageInstructionDisplay(1)
         stage1()
     elif currentStageIndex == 2:
         stage2Front()
         stage2Display()
-        bleStageInstructionDisplay(currentStageIndex)
+        bleStageInstructionDisplay(2)
         stage2()
     elif currentStageIndex == 3:
         stage3Front()
         stage3Display()
-        bleStageInstructionDisplay(currentStageIndex)
+        bleStageInstructionDisplay(3)
         stage3()
     elif currentStageIndex == 4:
         stage4Front()
         stage4Display()
-        bleStageInstructionDisplay(currentStageIndex)
+        bleStageInstructionDisplay(4)
         stage4()
     elif currentStageIndex == 5:
         stage5Front()
         stage5Display()
-        bleStageInstructionDisplay(currentStageIndex)
+        bleStageInstructionDisplay(5)
         stage5()
 
 def nextStage():
@@ -154,6 +157,8 @@ def nextStage():
     lcd.putstr("Stage: " + str(currentStageIndex) + "/5")
     ble.write("-------------Stage " + str(currentStageIndex) +"-------------")
     clearLCD2()
+    
+    currentStage()
 
 def hint():
     global currentStageIndex
@@ -202,21 +207,16 @@ def main():
     global stage5SuccessFlag
 
     if is_ble_connected == True:
+        ##currentStageIndex = 1 ##TODO:Debug時指定起始關卡用
         startGame()
-        ##currentStageIndex = 1 ##TODO:指定起始用
-        currentStage(currentStageIndex)
         if stage1SuccessFlag == 1:
             nextStage()
-            currentStage()
         if stage2SuccessFlag == 1:
             nextStage()
-            currentStage()
         if stage3SuccessFlag == 1:
             nextStage()
-            currentStage()
         if stage4SuccessFlag == 1:
             nextStage()
-            currentStage()
         if stage5SuccessFlag == 1:
             finish()
 
@@ -412,8 +412,6 @@ def stage3Display():
     lcd.putstr("Increase the")
     lcd.move_to(0,1)
     lcd.putstr("Humidity")
-
-    ##bleDisplay
     stageInstruction[3] = "增加濕度到 " + str(s3Target) + " %"
     
 def stage3():
@@ -465,10 +463,10 @@ def stage4():
         s4Brightness = lightSensor.read()
         print(str(s4Brightness))
         if s4TargetFlag == 1:
-            if (s4Brightness) > s4Target:
+            if s4Brightness > s4Target:
                 stage4SuccessFlag = 1
         else:
-            if (s4Brightness) < s4Target:
+            if s4Brightness < s4Target:
                 stage4SuccessFlag = 1
 
 
@@ -483,60 +481,37 @@ def stage5Front():
 
 def stage5Display():
     global stageInstruction
-    global s5QuestionList
     global s5Question
     
     lcd.move_to(0,0)
     lcd.putstr("Answer on Phone")
 
     ##bleDisplay
-    if s5Question == s5QuestionList[0]:
-        stageInstruction[5] = "1st"
-    elif s5Question == s5QuestionList[1]:
-        stageInstruction[5] = "2nd"
-    ##elif s5Question == s5QuestionList[2]: ##TODO: 有加題目就繼續放
-    ##    stageInstruction[5] = ""
-    
-def correct():
-    global stage5SuccessFlag
-
-    clearLCD1()
-    lcd.move_to(0,0)
-    lcd.putstr("Correct")
-    clearLCD1()
-    stage5SuccessFlag = 1
-
-def incorrect():
-    clearLCD1()
-    lcd.move_to(0,0)
-    lcd.putstr("Incorrect")
-    clearLCD1()
-    stage5Display()
+    stageInstruction[5] = "請回答下列問題: " + s5Question
     
 def stage5():
     global s5Question
-    global s5QuestionList
+    global stage5SuccessFlag
     
     while True:
         cmd = str(ble.read(30), 'utf-8').strip('\0')
         if is_ble_connected == True:
             if cmd != "":
                 print(cmd)
-                if s5Question == s5QuestionList[0]:
-                    if cmd == s5Question:
-                        correct()
-                        break
-                    else:
-                        incorrect()
-                elif s5Question == s5QuestionList[1]:
-                    if cmd == s5Question:
-                        correct()
-                        break
-                    else:
-                        incorrect()
-                ##TODO: 有加題目就繼續放
-
-        delay(1000)
+                if cmd == s5Question:
+                    clearLCD1()
+                    lcd.move_to(0,0)
+                    lcd.putstr("Correct")
+                    clearLCD1()
+                    stage5SuccessFlag = 1
+                    break
+                else:
+                    clearLCD1()
+                    lcd.move_to(0,0)
+                    lcd.putstr("Incorrect")
+                    clearLCD1()
+                    stage5Display()
+        delay(500)
 
 
 ##主程式------------------------------------------------------
