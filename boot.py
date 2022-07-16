@@ -21,7 +21,7 @@ def clearLCD2():
 lcd.move_to(0,0)
 lcd.putstr("Welcome to")
 lcd.move_to(0,1)
-lcd.putstr("He-Sheng")
+lcd.putstr("Ho-Seng")
 
 clearLCD2()
 

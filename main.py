@@ -27,7 +27,7 @@ ble = BleUart(0, 115200)
 delay(200)
 ble.cmd_mode_entry()
 ble.cmd_AT()
-ble.set_device_name('New Age Men')
+ble.set_device_name('Ho-Seng')
 
 while True:
     cmd = str(ble.read(30), 'utf-8').strip('\0')
