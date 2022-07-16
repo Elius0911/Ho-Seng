@@ -1,4 +1,4 @@
-##插件與腳位定義----------------------------------------------
+##插件--------------------------------------------------------
 from machine import I2C, Pin, ADC, PWM, Timer
 from sensor import DHT11
 import voice_recognition
@@ -10,16 +10,19 @@ from lcd_api import LcdApi
 
 timer = Timer(1)
 
+##語音辨識用
 voice_recognition.load_database('cmd.bin')
 delay(500)
 voice_recognition.start(10)
 
+##LCD用
 I2C_ADDR = 0x27
 I2C_NUM_ROWS = 2
 I2C_NUM_COLS = 16
 i2c = I2C(scl='C0', sda='C1', freq=400000)
 lcd = I2cLcd(i2c, I2C_ADDR, I2C_NUM_ROWS, I2C_NUM_COLS)
 
+##藍芽連接用
 ble = BleUart(0, 115200)
 delay(200)
 ble.cmd_mode_entry()
@@ -89,7 +92,7 @@ def clearLED():
     rgbG.value(0)
     rgbB.value(0)  
 
-def bleStageInstructionDisplay(index):
+def bleStageInstructionDisplay(index): ##藍芽: 手機上顯示題目
     global stageInstruction
     if is_ble_connected == True:
         delay(100)
@@ -176,7 +179,7 @@ def hint():
             ble.write("用某樣東西蓋著光敏電阻看看?")
     ##else: ##TODO: 看題目是什麼, 給不同提示
 
-def finish():
+def finish(): ##關卡全破
     global timer
 
     clearLCD1()
@@ -186,7 +189,7 @@ def finish():
     lcd.move_to(0,1)
     lcd.putstr("time: " + str(timer))
 
-def gameover():
+def gameover(): ##強制結束遊戲
     global timer
 
     lcd.move_to(0,0)
@@ -197,7 +200,7 @@ def gameover():
 
 
 ##主要--------------------------------------------------------
-def main():
+def main(): ##遊戲開始與推進用
     global currentStageIndex
     global stage1SuccessFlag
     global stage2SuccessFlag
@@ -219,7 +222,7 @@ def main():
         if stage5SuccessFlag == 1:
             finish()
 
-def init():
+def init(): ##初始化/重置
     global timer
     global inGame
     global currentStageIndex
@@ -469,7 +472,7 @@ def stage4():
                 stage4SuccessFlag = 1
 
 
-##--- Stage5 藍芽模組解謎: 手機答題 ---
+##--- Stage5: 手機解謎(藍芽) ---
 def stage5Front():
     global stageInstruction
     global s5QuestionList
