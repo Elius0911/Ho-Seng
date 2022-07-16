@@ -33,9 +33,15 @@ while True:
     cmd = str(ble.read(30), 'utf-8').strip('\0')
     print(cmd)
     delay(1000)
-    if cmd == "SYSTEM-ECHO=CONNECTED OK\r\n":      ##學習歷程有得寫囉 嘻嘻
+    if cmd == "SYSTEM-ECHO=CONNECTED OK\r\n":
         ble.data_mode_entry()
         is_ble_connected = True
+        break
+
+while is_ble_connected == True:
+    if cmd == "SYSTEM-ECHO=DISCONNECTED OK\r\n":
+        is_ble_connected = False
+        disconnectedFlag = 1
         break
 
 
@@ -57,6 +63,7 @@ lightSensor = ADC(0)
 
 ##全域變數----------------------------------------------------
 inGame = 0 ##是否正在遊戲中
+disconnectedFlag = 0
 currentStageIndex = 1
 stageInstruction = ["", "Instuction1", "Instuction2", "Instuction3", "Instuction4", "Instuction5"]  ##關卡說明
 
@@ -103,7 +110,7 @@ def startGame():
     global timer
     global inGame
 
-    timer.init(period=500, mode=Timer.PERIODIC, callback=None) ##TODO: 計時器
+    timer.init(period=500, mode=Timer.PERIODIC, callback=None) ##TODO: 計時器測試
     inGame = 1
 
     lcd.move_to(0,0)
@@ -198,6 +205,10 @@ def gameover(): ##強制結束遊戲
     lcd.move_to(0,1)
     lcd.putstr("time: " + str(timer))
 
+def disconnected():
+    lcd.move_to(0,0)
+    lcd.putstr("Disconnected")
+
 
 ##主要--------------------------------------------------------
 def main(): ##遊戲開始與推進用
@@ -225,6 +236,7 @@ def main(): ##遊戲開始與推進用
 def init(): ##初始化/重置
     global timer
     global inGame
+    global disconnectedFlag
     global currentStageIndex
     global stageInstruction
 
@@ -244,6 +256,7 @@ def init(): ##初始化/重置
 
     timer.deinit()
     inGame = 0
+    disconnectedFlag = 0
     currentStageIndex = 1
     stageInstruction = ["", "Instuction1", "Instuction2", "Instuction3", "Instuction4", "Instuction5"]  ##關卡說明
 
@@ -262,6 +275,7 @@ def init(): ##初始化/重置
     s5Question = ""
 
     clearLCD2()
+
 
 ##各關函式----------------------------------------------------
 
@@ -308,7 +322,6 @@ def stage1():
                 stage1SuccessFlag = 1
                 fan.duty(0)
                 break
-        
         delay(100)
 
 
@@ -474,7 +487,6 @@ def stage4():
 
 ##--- Stage5: 手機解謎(藍芽) ---
 def stage5Front():
-    global stageInstruction
     global s5QuestionList
     global s5Question
 
@@ -497,22 +509,21 @@ def stage5():
     
     while True:
         cmd = str(ble.read(30), 'utf-8').strip('\0')
-        if is_ble_connected == True:
-            if cmd != "":
-                print(cmd)
-                if cmd == s5Question:
-                    clearLCD1()
-                    lcd.move_to(0,0)
-                    lcd.putstr("Correct")
-                    clearLCD1()
-                    stage5SuccessFlag = 1
-                    break
-                else:
-                    clearLCD1()
-                    lcd.move_to(0,0)
-                    lcd.putstr("Incorrect")
-                    clearLCD1()
-                    stage5Display()
+        if cmd != "":
+            print(cmd)
+            if cmd == s5Question:
+                clearLCD1()
+                lcd.move_to(0,0)
+                lcd.putstr("Correct")
+                clearLCD1()
+                stage5SuccessFlag = 1
+                break
+            else:
+                clearLCD1()
+                lcd.move_to(0,0)
+                lcd.putstr("Incorrect")
+                clearLCD1()
+                stage5Display()
         delay(500)
 
 
@@ -531,3 +542,5 @@ while True:
         if cmd_id == 7: ##重新遊戲
             init()
             main()
+        if disconnectedFlag == 1:
+            disconnected()

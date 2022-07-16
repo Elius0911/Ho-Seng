@@ -19,9 +19,9 @@ def clearLCD2():
 
 ##起始字樣----------------------------------------------------
 lcd.move_to(0,0)
-lcd.putstr("Welcome to the")
+lcd.putstr("Welcome to")
 lcd.move_to(0,1)
-lcd.putstr("Game")
+lcd.putstr("He-Sheng")
 
 clearLCD2()
 
