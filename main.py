@@ -537,7 +537,7 @@ def stage5():
 
 ##主程式------------------------------------------------------
 while True:
-    cmd_id =voice_recognition.get_id() ##TODO: 確認語音ID
+    cmd_id =voice_recognition.get_id() ##TODO: 安裝語音包, 確認語音ID
     if inGame == 0: ##未進遊戲
         if cmd_id == 1: ##開始遊戲
             init()
