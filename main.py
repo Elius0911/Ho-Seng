@@ -528,6 +528,8 @@ def stage5():
 
 
 ##主程式------------------------------------------------------
+
+'''
 while True:
     cmd_id = voice_recognition.get_id() ##TODO: 安裝語音包, 確認語音ID
     if inGame == 0: ##未進遊戲
@@ -543,4 +545,20 @@ while True:
             init()
             main()
         if disconnectedFlag == 1:
+            disconnected()
+
+
+'''
+##閹割版
+while True:
+    cmd_id = voice_recognition.get_id() ##TODO: 語音包
+    if cmd_id == 1: ##開始遊戲
+        init()
+        main()
+        print(cmd_id)
+    if cmd_id == 7: ##重新開始
+        init()
+        main()
+        print(cmd_id)
+    if disconnectedFlag == 1:
             disconnected()
