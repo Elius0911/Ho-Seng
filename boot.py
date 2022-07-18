@@ -2,14 +2,12 @@
 from machine import I2C, Pin, ADC, PWM
 from sensor import DHT11
 import voice_recognition
-from gpb import delay, timer
+from gpb import delay
 import urandom
 import audio_decode
 from ble_uart import BleUart
 from i2c_lcd import I2cLcd
 from lcd_api import LcdApi
-
-##gameTime = timer(1) ##TODO: Time
 
 ##揚聲器
 audio_decode.init()
@@ -34,7 +32,6 @@ ble.cmd_AT()
 ble.set_device_name('Ho-Seng')
 
 
-
 ##元件腳位----------------------------------------------------
 vr = ADC(1)
 fan = PWM(5, 200, 0)
@@ -53,6 +50,8 @@ lightSensor = ADC(0)
 
 ##全域變數----------------------------------------------------
 inGame = 0 ##是否正在遊戲中
+timeCounter = 0
+
 currentStageIndex = 1
 disconnectedFlag = 0
 stageInstruction = ["", "Instuction1", "Instuction2", "Instuction3", "Instuction4", "Instuction5"]  ##關卡說明
@@ -75,6 +74,10 @@ s5Question = ""
 
 
 ##函式--------------------------------------------------------
+def time_ct(t):
+    global timeCounter
+    timeCounter += 1
+
 def clearLCD1():
     delay(1000)
     lcd.clear()
@@ -117,10 +120,8 @@ def boot():
 
 
 def startGame():
-    ##global gameTime ##TODO: Timer
     global inGame
 
-    ##gameTime.init(period=500, mode=Timer.PERIODIC, callback=None) ##TODO: Timer
     inGame = 1
 
     lcd.move_to(0,0)
@@ -198,7 +199,6 @@ def hint():
 
 def allClear(): ##關卡全破
     global inGame
-    ##global gameTime ##TODO: Timer
 
     inGame = 0
 
@@ -206,12 +206,10 @@ def allClear(): ##關卡全破
     lcd.move_to(0,0)
     lcd.putstr("Congratulations!")
     ble.write("------Congratulations!!------")
-    ##lcd.move_to(0,1)
-    ##lcd.putstr("time: " + str(timer)) ##TODO: Timer
+    lcd.move_to(0,1)
 
 def finishGame(): ##強制結束遊戲
     global inGame
-    ##global gameTime ##TODO: Timer
 
     inGame = 0
 
@@ -219,8 +217,7 @@ def finishGame(): ##強制結束遊戲
     lcd.move_to(0,0)
     lcd.putstr("Game Over")
     ble.write("----------Game Over----------")
-    ##lcd.move_to(0,1)
-    ##lcd.putstr("time: " + str(timer)) ##TODO: Timer
+    lcd.move_to(0,1)
 
 def connected():
     global disconnectedFlag
@@ -256,7 +253,7 @@ def main(): ##遊戲開始與推進用
     global stage5SuccessFlag
 
     if is_ble_connected == True:
-        currentStageIndex = 1 ##TODO:Debug時指定起始關卡用
+        currentStageIndex = 1               ##TODO:Debug時指定起始關卡用
         startGame()
         if stage1SuccessFlag == 1:
             audio_decode.start('correct.mp3')
@@ -271,11 +268,10 @@ def main(): ##遊戲開始與推進用
             audio_decode.start('correct.mp3')
             nextStage()
         if stage5SuccessFlag == 1:
-            audio_decode.start('allClear.mp3') ##TODO: 放ALL CLEAR音樂
+            audio_decode.start('allClear.mp3')
             allClear()
 
 def init(): ##初始化/重置
-    ##global gameTime ##TODO: Timer
     global inGame
     global disconnectedFlag
     global currentStageIndex
@@ -295,7 +291,6 @@ def init(): ##初始化/重置
     global s4Target
     global s5Question
 
-    ##gameTime.deinit() ##TODO: Timer
     inGame = 0
     disconnectedFlag = 0
     currentStageIndex = 1
@@ -435,7 +430,7 @@ def stage2():
                 break
         
         cmd = str(ble.read(30), 'utf-8').strip('\0')
-        delay(500)
+        delay(200)
         if cmd == "SYSTEM-ECHO=DISCONNECTED OK\r\n":
             is_ble_connected = False
             disconnected()
@@ -501,15 +496,16 @@ def stage3Front():
 
     while True:
         humidity = dht.humidity()
-        print(humidity)
         delay(200)
         if humidity >= 5:
             if humidity <= 65:
                 break
             else:
                 humidity = 60
+                break
         else:
             humidity = 60
+            break
         
     s3Target = humidity + 5
 
@@ -552,7 +548,7 @@ def stage3():
         delay(200)
     
 
-##--- Stage4: 光敏電阻 --- ##TODO: 合併完, 要測試
+##--- Stage4: 光敏電阻 ---
 def stage4Front():
     global s4Brightness
     global s4TargetFlag
@@ -566,7 +562,7 @@ def stage4Front():
     s4TargetFlag = urandom.randint(0,1)
 
     if s4TargetFlag == 1:
-        s4Target = s4Brightness - 300 ##越亮, 值越低
+        s4Target = s4Brightness - 200 ##越亮, 值越低
     else:
         s4Target = s4Brightness + 300
 
@@ -577,10 +573,10 @@ def stage4Display():
     lcd.move_to(0,0)
     if s4TargetFlag == 1:
         lcd.putstr("Let it Brighter")
-        stageInstruction[4] = "讓光感電阻變得更亮"
+        stageInstruction[4] = "讓光敏電阻變得更亮"
     else:
         lcd.putstr("Let it Darker")
-        stageInstruction[4] = "讓光感電阻變得更暗"
+        stageInstruction[4] = "讓光敏電阻變得更暗"
     
 def stage4():
     global s4Brightness
