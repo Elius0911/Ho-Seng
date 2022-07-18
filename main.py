@@ -198,14 +198,16 @@ def finish(): ##關卡全破
 
 def gameover(): ##強制結束遊戲
     ##global gameTime
-
+    global inGame
+    
+    inGame = 0
+    
     lcd.move_to(0,0)
     lcd.putstr("Game Over")
     ble.write("----------Game Over----------")
     ##lcd.move_to(0,1)
     ##lcd.putstr("time: " + str(gameTime)) ##TODO: Timer不知道怎麼取得時間值QQ
 
-    init()
 
 def disconnected():
     lcd.move_to(0,0)
@@ -222,7 +224,7 @@ def main(): ##遊戲開始與推進用
     global stage5SuccessFlag
 
     if is_ble_connected == True:
-        currentStageIndex = 5 ##TODO:Debug時指定起始關卡用
+        ##currentStageIndex = 5 ##TODO:Debug時指定起始關卡用
         startGame()
         if stage1SuccessFlag == 1:
             nextStage()
@@ -275,6 +277,8 @@ def init(): ##初始化/重置
     s4TargetFlag = 0
     s4Target = 0
     s5Question = ""
+    
+    clearLCD2()
 
 
 ##各關函式----------------------------------------------------
@@ -557,18 +561,14 @@ while True:
         if cmd_id == 1: ##開始遊戲
             init()
             main()
-            print(cmd_id)
     else: ##正在遊戲中
         if cmd_id == 2: ##結束遊戲
             gameover()
-            print(cmd_id)
         if cmd_id == 3: ##請求支援(提示)
             hint()
-            print(cmd_id)
         if cmd_id == 7: ##重新開始
             init()
             main()
-            print(cmd_id)
         if disconnectedFlag == 1:
             disconnected()
 
