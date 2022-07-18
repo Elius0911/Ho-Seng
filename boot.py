@@ -69,8 +69,11 @@ s3Target = 0
 s4Brightness = 0
 s4TargetFlag = 0
 s4Target = 0
-s5QuestionList = ["cc","cc2"] ##TODO: stage5題目
+s5QuestionList = ["誰提出了相對論?", "台灣第一次民選總統是西元幾年?", "2022金曲獎最佳作詞人?", "1x2x3x4x5x4x3x2x1=?", "請問盒勝的諧音雙關是?"] ##TODO: stage5題目
+s5HintList = ["吐舌頭的人", "民國85年", '"凶宅"的本名', "慢慢算", "台語"]
+s5AnswerList = ["愛因斯坦", "1996", "熊信寬", "2880", "好玩"]
 s5Question = ""
+s5Answer = ""
 
 
 ##函式--------------------------------------------------------
@@ -183,6 +186,9 @@ def nextStage():
 def hint():
     global currentStageIndex
     global s4TargetFlag
+    global s5QuestionList
+    global s5Question
+    global s5HintList
 
     if currentStageIndex == 1:
         ble.write("轉動可變電阻看看?")
@@ -195,7 +201,10 @@ def hint():
             ble.write("用某樣東西照著光敏電阻看看?")
         else:
             ble.write("用某樣東西蓋著光敏電阻看看?")
-    ##else: ##TODO: 看題目是什麼, 給不同提示
+    else: ##TODO: stage5提示
+        for i in range(len(s5HintList)):
+            if s5Question == s5QuestionList[i]:
+                ble.write(s5HintList[i])
 
 def allClear(): ##關卡全破
     global inGame
@@ -256,19 +265,19 @@ def main(): ##遊戲開始與推進用
         currentStageIndex = 1               ##TODO:Debug時指定起始關卡用
         startGame()
         if stage1SuccessFlag == 1:
-            audio_decode.start('correct.mp3')
+            audio_decode.start('stageClear.mp3') ##音效
             nextStage()
         if stage2SuccessFlag == 1:
-            audio_decode.start('correct.mp3')
+            audio_decode.start('stageClear.mp3') ##音效
             nextStage()
         if stage3SuccessFlag == 1:
-            audio_decode.start('correct.mp3')
+            audio_decode.start('stageClear.mp3') ##音效
             nextStage()
         if stage4SuccessFlag == 1:
-            audio_decode.start('correct.mp3')
+            audio_decode.start('stageClear.mp3') ##音效
             nextStage()
         if stage5SuccessFlag == 1:
-            audio_decode.start('allClear.mp3')
+            audio_decode.start('allClear.mp3') ##音效
             allClear()
 
 def init(): ##初始化/重置
@@ -290,6 +299,7 @@ def init(): ##初始化/重置
     global s4TargetFlag
     global s4Target
     global s5Question
+    global s5Answer
 
     inGame = 0
     disconnectedFlag = 0
@@ -309,6 +319,7 @@ def init(): ##初始化/重置
     s4TargetFlag = 0
     s4Target = 0
     s5Question = ""
+    s5Answer = ""
 
     clearLCD2()
 
@@ -624,9 +635,12 @@ def stage4():
 def stage5Front():
     global s5QuestionList
     global s5Question
+    global s5AnswerList
+    global s5Answer
 
-    qPicker = urandom.randint(0, 1)
+    qPicker = urandom.randint(0, len(s5QuestionList))
     s5Question = s5QuestionList[qPicker]
+    s5Answer = s5AnswerList[qPicker]
 
 def stage5Display():
     global stageInstruction
@@ -640,6 +654,7 @@ def stage5Display():
     
 def stage5():
     global s5Question
+    global s5Answer
     global stage5SuccessFlag
     global is_ble_connected
 
@@ -663,18 +678,18 @@ def stage5():
             disconnected()
             break
         elif cmd != "":
-            if cmd == s5Question:
+            if cmd == s5Answer:
                 clearLCD1()
                 lcd.move_to(0,0)
                 lcd.putstr("Correct")
-                audio_decode.start('correct.mp3')
+                audio_decode.start('stageClear.mp3') ##音效
                 clearLCD1()
                 stage5SuccessFlag = 1
                 break
             else:
                 clearLCD1()
                 lcd.move_to(0,0)
-                audio_decode.start('wrong.mp3')
+                audio_decode.start('wrong.mp3') ##音效
                 lcd.putstr("Incorrect")
                 clearLCD1()
                 stage5Display()
