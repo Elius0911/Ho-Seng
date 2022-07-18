@@ -555,10 +555,8 @@ while True:
     if cmd_id == 1: ##開始遊戲
         init()
         main()
-        print(cmd_id)
     if cmd_id == 7: ##重新開始
         init()
         main()
-        print(cmd_id)
     if disconnectedFlag == 1:
             disconnected()
