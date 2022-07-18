@@ -542,10 +542,12 @@ def stage3():
             break
 
         humidity = dht.humidity()
+        lcd.move_to(11,1)               ##TODO: test, 濕度即時更新
+        lcd.putstr(str(humidity) + "%")
+
         if humidity >= s3Target:
             stage3SuccessFlag = 1
             break
-        delay(200)
     
 
 ##--- Stage4: 光敏電阻 ---
@@ -616,7 +618,6 @@ def stage4():
             if s4Brightness > s4Target:
                 stage4SuccessFlag = 1
                 break
-        delay(200)
 
 
 ##--- Stage5: 手機解謎(藍芽) ---
@@ -677,7 +678,6 @@ def stage5():
                 lcd.putstr("Incorrect")
                 clearLCD1()
                 stage5Display()
-        delay(200)
 
 
 ##主程式------------------------------------------------------
