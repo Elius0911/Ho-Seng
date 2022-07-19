@@ -11,6 +11,7 @@ from lcd_api import LcdApi
 
 ##揚聲器
 audio_decode.init()
+audio_decode.volume_up(30)
 
 ##語音辨識用
 voice_recognition.load_database('cmd.bin')
@@ -168,20 +169,22 @@ def currentStage():
 
 def nextStage():
     global currentStageIndex
-    currentStageIndex += 1
-
-    clearLCD1()
-    lcd.move_to(0,0)
-    lcd.putstr("Stage Clear!!")
-    clearLCD2()
-
-    lcd.putstr("Next Stage")
-    lcd.move_to(0,1)
-    lcd.putstr("Stage: " + str(currentStageIndex) + "/5")
-    ble.write("-----------Stage " + str(currentStageIndex) +"-----------")
-    clearLCD2()
     
-    currentStage()
+    if currentStageIndex <=4:
+        currentStageIndex += 1
+
+        clearLCD1()
+        lcd.move_to(0,0)
+        lcd.putstr("Stage Clear!!")
+        clearLCD2()
+
+        lcd.putstr("Next Stage")
+        lcd.move_to(0,1)
+        lcd.putstr("Stage: " + str(currentStageIndex) + "/5")
+        ble.write("-----------Stage " + str(currentStageIndex) +"-----------")
+        clearLCD2()
+        
+        currentStage()
 
 def hint():
     global currentStageIndex
@@ -191,20 +194,20 @@ def hint():
     global s5HintList
 
     if currentStageIndex == 1:
-        ble.write("轉動可變電阻看看?")
+        ble.write("HINT: " + "轉動可變電阻看看?")
     elif currentStageIndex == 2:
-        ble.write("按下不同的按鈕看看?")
+        ble.write("HINT: " + "按下不同的按鈕看看?")
     elif currentStageIndex == 3:
-        ble.write("用手指壓著濕度感測器久一些看看?")
+        ble.write("HINT: " + "用手指壓著濕度感測器久一些看看?")
     elif currentStageIndex == 4:
         if s4TargetFlag == 1:
-            ble.write("用某樣東西照著光敏電阻看看?")
+            ble.write("HINT: " + "用某樣東西照著光敏電阻看看?")
         else:
-            ble.write("用某樣東西蓋著光敏電阻看看?")
+            ble.write("HINT: " + "用某樣東西蓋著光敏電阻看看?")
     else: ##TODO: stage5提示
-        for i in range(len(s5HintList)):
+        for i in range(len(s5HintList) - 1):
             if s5Question == s5QuestionList[i]:
-                ble.write(s5HintList[i])
+                ble.write("HINT: " + s5HintList[i])
 
 def allClear(): ##關卡全破
     global inGame
@@ -225,7 +228,7 @@ def finishGame(): ##強制結束遊戲
     clearLCD1()
     lcd.move_to(0,0)
     lcd.putstr("Game Over")
-    ble.write("----------Game Over----------")
+    ble.write("---------Game Over---------")
     lcd.move_to(0,1)
 
 def connected():
@@ -245,8 +248,10 @@ def connected():
 
 def disconnected():
     global disconnectedFlag
+    global inGame
 
     disconnectedFlag = 1
+    inGame = 0
     clearLCD2()
     lcd.move_to(0,0)
     lcd.putstr("Disconnected")
@@ -551,10 +556,11 @@ def stage3():
             is_ble_connected = False
             disconnected()
             break
-
+        
         humidity = dht.humidity()
-        lcd.move_to(11,1)               ##TODO: test, 濕度即時更新
-        lcd.putstr(str(humidity) + "%")
+        if dht.humidity() != 0.0:
+            lcd.move_to(11,1)
+            lcd.putstr(str(humidity) + "%")
 
         if humidity >= s3Target:
             stage3SuccessFlag = 1
@@ -570,12 +576,19 @@ def stage4Front():
     while True:
         s4Brightness = lightSensor.read()
         delay(200)
-        if s4Brightness > 100:
+        if s4Brightness > 300:
             break
     s4TargetFlag = urandom.randint(0,1)
 
     if s4TargetFlag == 1:
-        s4Target = s4Brightness - 200 ##越亮, 值越低
+        if s4Brightness >= 800:
+            s4Target = s4Brightness - 300 ##越亮, 值越低
+        elif s4Brightness >= 600:
+            s4Target = s4Brightness - 150
+        elif s4Brightness >= 500:
+            s4Target = s4Brightness - 50
+        elif s4Brightness >= 450:
+            s4Target = 450
     else:
         s4Target = s4Brightness + 300
 
@@ -638,7 +651,7 @@ def stage5Front():
     global s5AnswerList
     global s5Answer
 
-    qPicker = urandom.randint(0, len(s5QuestionList))
+    qPicker = urandom.randint(0, len(s5QuestionList) - 1)
     s5Question = s5QuestionList[qPicker]
     s5Answer = s5AnswerList[qPicker]
 
@@ -691,8 +704,6 @@ def stage5():
                 lcd.move_to(0,0)
                 audio_decode.start('wrong.mp3') ##音效
                 lcd.putstr("Incorrect")
-                clearLCD1()
-                stage5Display()
 
 
 ##主程式------------------------------------------------------
