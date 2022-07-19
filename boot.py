@@ -514,16 +514,15 @@ def stage3Front():
         humidity = dht.humidity()
         delay(200)
         if humidity >= 5:
-            if humidity <= 65:
+            if humidity >= 60:
+                s3Target = 65
                 break
             else:
-                humidity = 60
+                s3Target = humidity + 5
                 break
         else:
-            humidity = 60
-            break
+            s3Target = 65
         
-    s3Target = humidity + 5
 
 def stage3Display():
     lcd.move_to(0,0)
@@ -558,7 +557,7 @@ def stage3():
             break
         
         humidity = dht.humidity()
-        if dht.humidity() != 0.0:
+        if dht.humidity() >= 5:
             lcd.move_to(11,1)
             lcd.putstr(str(humidity) + "%")
 
@@ -576,21 +575,28 @@ def stage4Front():
     while True:
         s4Brightness = lightSensor.read()
         delay(200)
-        if s4Brightness > 300:
+        if s4Brightness > 250:
             break
+        else:
+            s4Brightness = 250
+            break
+    print("b"+str(s4Brightness))
     s4TargetFlag = urandom.randint(0,1)
 
     if s4TargetFlag == 1:
         if s4Brightness >= 800:
-            s4Target = s4Brightness - 300 ##越亮, 值越低
+            s4Target = s4Brightness - 400 ##越亮, 值越低
         elif s4Brightness >= 600:
-            s4Target = s4Brightness - 150
+            s4Target = s4Brightness - 200
         elif s4Brightness >= 500:
-            s4Target = s4Brightness - 50
-        elif s4Brightness >= 450:
-            s4Target = 450
+            s4Target = s4Brightness - 100
+        elif s4Brightness >= 400:
+            s4Target = 400
+        else:
+            s4Target = 250
     else:
         s4Target = s4Brightness + 300
+    print("Target"+str(s4Target))
 
 def stage4Display():
     global s4TargetFlag
@@ -632,6 +638,7 @@ def stage4():
             break
         
         brightnessRead = lightSensor.read()
+        print("read"+str(brightnessRead))
         if brightnessRead != 0:
             s4Brightness = brightnessRead
         if s4TargetFlag == 1:
