@@ -514,8 +514,8 @@ def stage3Front():
         humidity = dht.humidity()
         delay(200)
         if humidity >= 5:
-            if humidity >= 60:
-                s3Target = 65
+            if humidity >= 65:
+                s3Target = 70
                 break
             else:
                 s3Target = humidity + 5
@@ -585,15 +585,13 @@ def stage4Front():
 
     if s4TargetFlag == 1:
         if s4Brightness >= 800:
-            s4Target = s4Brightness - 400 ##越亮, 值越低
+            s4Target = s4Brightness - 300 ##越亮, 值越低
         elif s4Brightness >= 600:
             s4Target = s4Brightness - 200
-        elif s4Brightness >= 500:
-            s4Target = s4Brightness - 100
         elif s4Brightness >= 400:
             s4Target = 400
         else:
-            s4Target = 250
+            s4Target = 300
     else:
         s4Target = s4Brightness + 300
     print("Target"+str(s4Target))
