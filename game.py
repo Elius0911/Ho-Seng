@@ -238,7 +238,7 @@ def incorrect():
     stage5LCD()
     
 def stage5():
-    questionList = ["cc","cc2"] ##TODO: 放題目
+    questionList = ["cc","cc2"]
     qPicker = urandom.randint(0, 1)
     question = questionList[qPicker]
     print(question)
