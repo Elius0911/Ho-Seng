@@ -267,7 +267,7 @@ def main(): ##遊戲開始與推進用
     global stage5SuccessFlag
 
     if is_ble_connected == True:
-        currentStageIndex = 1               ##TODO:Debug時指定起始關卡用
+        ##currentStageIndex = 1               ##TODO:Debug時指定起始關卡用
         startGame()
         if stage1SuccessFlag == 1:
             audio_decode.start('stageClear.mp3') ##音效
